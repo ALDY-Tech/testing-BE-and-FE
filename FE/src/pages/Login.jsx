@@ -1,24 +1,43 @@
-import React from 'react';
-import {useNavigate} from "react-router-dom"
-
+import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import axios from 'axios'; // jangan lupa install: npm install axios
 
 const Login = () => {
-    const navigate = useNavigate()
-    const handleLogin = () =>{
-        navigate("/crud")
+  const navigate = useNavigate();
+  const [username, setusername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post("http://localhost:5000/login", {
+        username,
+        password
+      });
+
+      // Jika login sukses, bisa simpan token (kalau pakai JWT)
+      const token = response.data.token; // asumsi respons berisi token
+      localStorage.setItem("token", token);
+
+      navigate("/crud");
+    } catch (error) {
+      alert("Login gagal. Cek username atau password.");
+      console.error("Login error:", error.response?.data || error.message);
     }
+  };
+
   return (
     <div className="h-screen flex items-center justify-center bg-white">
       <div className="bg-yellow text-blue p-8 rounded-xl shadow-lg w-full max-w-md font-montserrat">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-
         <div className="space-y-4">
           <div>
-            <label htmlFor="email" className="block mb-1 text-sm">Email</label>
+            <label htmlFor="username" className="block mb-1 text-sm">username</label>
             <input
-              type="email"
-              id="email"
+              type="username"
+              id="username"
               placeholder="example@mail.com"
+              value={username}
+              onChange={(e) => setusername(e.target.value)}
               className="w-full px-4 py-2 rounded-md text-blue border border-blue focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
             />
           </div>
@@ -29,11 +48,16 @@ const Login = () => {
               type="password"
               id="password"
               placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 rounded-md text-blue border border-blue focus:outline-none focus:ring-2 focus:ring-yellow"
             />
           </div>
 
-          <button onClick={handleLogin} className="w-full bg-blue text-yellow font-semibold py-2 rounded-md hover:bg-[#7DBEFF] hover:text-[#DEDAD2] transition cursor-pointer">
+          <button
+            onClick={handleLogin}
+            className="w-full bg-blue text-yellow font-semibold py-2 rounded-md hover:bg-[#7DBEFF] hover:text-[#DEDAD2] transition cursor-pointer"
+          >
             Masuk
           </button>
 

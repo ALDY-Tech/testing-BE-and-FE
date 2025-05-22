@@ -2,23 +2,23 @@ const supabase  = require("../config/config.js");
 const argon2 = require("argon2");
 
 const Register = async (req, res) => {
-  const { email, password, confirmPassword } = req.body;
+  const { username, password, confirmPassword } = req.body;
 
   if (password !== confirmPassword) {
     return res.status(400).json({ msg: "Password dan konfirmasi tidak cocok" });
   }
 
   try {
-    // Cek apakah email sudah terdaftar
+    // Cek apakah username sudah terdaftar
     const { data: existing, error: checkError } = await supabase
       .from("users")
       .select("id")
-      .eq("email", email)
+      .eq("username", username)
       .limit(1);
 
     if (checkError) return res.status(500).json({ msg: checkError.message });
     if (existing.length > 0) {
-      return res.status(400).json({ msg: "Email sudah terdaftar" });
+      return res.status(400).json({ msg: "Username sudah terdaftar" });
     }
 
     // Hash password
@@ -27,7 +27,7 @@ const Register = async (req, res) => {
     // Insert user
     const { error } = await supabase.from("users").insert([
       {
-        email,
+        username,
         password: hashedPassword,
       },
     ]);
@@ -41,12 +41,12 @@ const Register = async (req, res) => {
 };
 
 const Login = async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
   const { data: users, error } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
+    .eq("username", username)
     .limit(1);
 
   if (error) return res.status(500).json({ msg: error.message });
@@ -61,7 +61,7 @@ const Login = async (req, res) => {
   req.session.userId = user.id;
   res
     .status(200)
-    .json({ msg: "Login berhasil", id: user.id, email: user.email });
+    .json({ msg: "Login berhasil", id: user.id, username: user.username });
 };
 
 module.exports = {
