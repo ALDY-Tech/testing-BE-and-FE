@@ -1,24 +1,25 @@
-// atur database seperti masuk ke mana
-/**
- *  * Important: This file is a placeholder for the authentication repository.
- *  ! error: This file should not be used in production.
- * ? what : This file is a placeholder for the authentication repository.
- * ? why : This file is a placeholder for the authentication repository.
- * TODO : This file should be replaced with the actual authentication repository.
- * @param {string} email - The email address of the user.
- */
+const db = require("../config/config.js");
 
-const db = require("../config");
+const insertUser = async (user) => {
+  const newUser =await db.user.create({
+    data: {
+      username: user.username,
+      password: user.password,
+    }
+  });
+  return newUser;
+};
 
-const insertUser = async (userData) => {
-    const user = await db.users.create({
-        data : {
-            email: userData.email,
-            password: userData.password,
-        },
-    });
-    return user;
-}
+const findUserByUsername = async (username) => {
+  const loginUser = await db.user.findUnique({
+    where: {
+      username: username,
+    },
+  });
+  return loginUser;
+};
 
-module.exports = insertUser;
-
+module.exports = {
+  insertUser,
+  findUserByUsername,
+};
