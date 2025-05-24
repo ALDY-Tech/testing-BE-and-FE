@@ -2,6 +2,8 @@ const express = require("express");
 const session = require("express-session");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoute.js");
+const transactionRoutes = require("./routes/transaction.js");
+// Inisialisasi Express
 
 const app = express();
 
@@ -27,5 +29,6 @@ app.use(
 
 // Gunakan routes
 app.use("/", authRoutes);
+app.use("/transaction", transactionRoutes);
 
 app.listen(5000, () => console.log("Server running on port 5000"));

@@ -15,7 +15,6 @@ const registerController = async (req, res) => {
     });
   } catch (err) {
     res.status(400).json({ msg: err.message });
-    console.log(err);
   }
 };
 
@@ -30,7 +29,6 @@ const loginController = async (req, res) => {
     });
   } catch (err) {
     res.status(400).json({ msg: err.message });
-    console.log(err);
   }
 };
 
