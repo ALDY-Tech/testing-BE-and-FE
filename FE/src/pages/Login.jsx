@@ -1,23 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios'; // jangan lupa install: npm install axios
-import logo from "../assets/logo.png"
+import axios from "axios";
+import logo from "../assets/logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [username, setusername] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
     try {
       const response = await axios.post("http://localhost:5000/login", {
         username,
-        password
+        password,
       });
 
-      // Jika login sukses, bisa simpan token (kalau pakai JWT)
-      const token = response.data.token; // asumsi respons berisi token
+      console.log("Login response:", response.data); // ✅ Debug
+
+      const { token, userId } = response.data;
+
+      if (!userId) throw new Error("User ID not returned from backend.");
+
       localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
 
       navigate("/crud");
     } catch (error) {
@@ -28,24 +33,30 @@ const Login = () => {
 
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-white">
-      <div><img src={logo} height={300} width={300} alt="" /></div>
-      <div className="bg-white text-blue p-8 rounded-xl shadow-2xl  w-full max-w-md font-montserrat">
+      <div>
+        <img src={logo} height={300} width={300} alt="Logo" />
+      </div>
+      <div className="bg-white text-blue p-8 rounded-xl shadow-2xl w-full max-w-md font-montserrat">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         <div className="space-y-4">
           <div>
-            <label htmlFor="username" className="block mb-1 text-sm">username</label>
+            <label htmlFor="username" className="block mb-1 text-sm">
+              Username
+            </label>
             <input
-              type="username"
+              type="text"
               id="username"
               placeholder="example@mail.com"
               value={username}
-              onChange={(e) => setusername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2 rounded-md text-blue border border-blue focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block mb-1 text-sm">Password</label>
+            <label htmlFor="password" className="block mb-1 text-sm">
+              Password
+            </label>
             <input
               type="password"
               id="password"
@@ -64,7 +75,10 @@ const Login = () => {
           </button>
 
           <p className="text-sm text-center mt-4">
-            Belum punya akun? <span className="underline cursor-pointer hover:text-[#7DBEFF]">Daftar di sini</span>
+            Belum punya akun?{" "}
+            <span className="underline cursor-pointer hover:text-[#7DBEFF]">
+              Daftar di sini
+            </span>
           </p>
         </div>
       </div>

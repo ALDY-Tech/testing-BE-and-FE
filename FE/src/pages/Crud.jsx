@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import {
   Table,
@@ -9,18 +9,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const dummyData = [
-  {
-    date: "2025-05-01",
-    accountName: "Valentio",
-    description: "Nabung",
-    amount: 150000,
-  },
-  // ... tambahkan data lainnya
-];
-
 const ResizableHead = ({ children, width, onMouseDown }) => (
-  <th className="relative border px-2 text-center text-xs md:text-sm lg:text-base" style={{ width }}>
+  <th
+    className="relative border px-2 text-center text-xs md:text-sm lg:text-base"
+    style={{ width }}
+  >
     <div>{children}</div>
     <div
       onMouseDown={onMouseDown}
@@ -31,6 +24,10 @@ const ResizableHead = ({ children, width, onMouseDown }) => (
 
 const Crud = () => {
   const [showModal, setShowModal] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [colWidths, setColWidths] = useState({
     no: 50,
     date: 150,
@@ -51,7 +48,10 @@ const Crud = () => {
     const onMouseMove = (e) => {
       if (!isDragging.current) return;
       const newWidth = startWidth + e.clientX - startX;
-      setColWidths((prev) => ({ ...prev, [key]: Math.max(newWidth, 50) }));
+      setColWidths((prev) => ({
+        ...prev,
+        [key]: Math.max(newWidth, 50),
+      }));
     };
 
     const onMouseUp = () => {
@@ -64,6 +64,33 @@ const Crud = () => {
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
   };
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    if (!storedUserId) {
+      setError("User ID not found in localStorage.");
+      setLoading(false);
+      return;
+    }
+
+    fetch("http://localhost:5000/transaction")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data) => {
+        const filtered = data.filter(
+          (item) => item.userId === parseInt(storedUserId)
+        );
+        console.log("Filtered data:", filtered);
+        setTransactions(filtered);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-xs md:text-sm lg:text-base">
@@ -100,7 +127,9 @@ const Crud = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium">Account Name</label>
+                    <label className="block text-sm font-medium">
+                      Account Name
+                    </label>
                     <input
                       type="text"
                       className="w-full border px-2 py-1 rounded"
@@ -108,7 +137,9 @@ const Crud = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium">Description</label>
+                    <label className="block text-sm font-medium">
+                      Description
+                    </label>
                     <input
                       type="text"
                       className="w-full border px-2 py-1 rounded"
@@ -144,65 +175,96 @@ const Crud = () => {
           )}
         </div>
 
-        <div className="w-full overflow-x-auto rounded-md border">
-          <div className="min-w-[600px]">
-            <Table className="bg-white w-full">
-              <TableHeader className="bg-yellow">
-                <tr>
-                  <ResizableHead width={colWidths.no} onMouseDown={handleMouseDown("no")}>No</ResizableHead>
-                  <ResizableHead width={colWidths.date} onMouseDown={handleMouseDown("date")}>Date</ResizableHead>
-                  <ResizableHead width={colWidths.name} onMouseDown={handleMouseDown("name")}>Account Name</ResizableHead>
-                  <ResizableHead width={colWidths.desc} onMouseDown={handleMouseDown("desc")}>Description</ResizableHead>
-                  <ResizableHead width={colWidths.amount} onMouseDown={handleMouseDown("amount")}>Amount</ResizableHead>
-                </tr>
-              </TableHeader>
-            </Table>
-
-            <div className="max-h-[500px] overflow-y-auto">
-              <Table className="w-full">
-                <TableBody>
-                  {dummyData.map((item, index) => (
-                    <TableRow
-                      key={index}
-                      className="hover:bg-yellow/10 transition-colors duration-200"
+        {error ? (
+          <p className="text-red-600">{error}</p>
+        ) : loading ? (
+          <p>Loading...</p>
+        ) : (
+          <div className="w-full overflow-x-auto rounded-md border">
+            <div className="min-w-[600px]">
+              <Table className="bg-white w-full">
+                <TableHeader className="bg-yellow">
+                  <tr>
+                    <ResizableHead
+                      width={colWidths.no}
+                      onMouseDown={handleMouseDown("no")}
                     >
-                      <TableCell
-                        className="border text-center px-2 whitespace-pre-wrap break-words"
-                        style={{ width: colWidths.no }}
-                      >
-                        {index + 1}
-                      </TableCell>
-                      <TableCell
-                        className="border text-center px-2 whitespace-pre-wrap break-words"
-                        style={{ width: colWidths.date }}
-                      >
-                        {item.date}
-                      </TableCell>
-                      <TableCell
-                        className="border text-center px-2 whitespace-pre-wrap break-words"
-                        style={{ width: colWidths.name }}
-                      >
-                        {item.accountName}
-                      </TableCell>
-                      <TableCell
-                        className="border text-left px-2 whitespace-pre-wrap break-words"
-                        style={{ width: colWidths.desc }}
-                      >
-                        {item.description}
-                      </TableCell>
-                      <TableCell
-                        className="border text-center px-2 whitespace-pre-wrap break-words"
-                        style={{ width: colWidths.amount }}
-                      >
-                        Rp {item.amount.toLocaleString("id-ID")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+                      No
+                    </ResizableHead>
+                    <ResizableHead
+                      width={colWidths.date}
+                      onMouseDown={handleMouseDown("date")}
+                    >
+                      Date
+                    </ResizableHead>
+                    <ResizableHead
+                      width={colWidths.name}
+                      onMouseDown={handleMouseDown("name")}
+                    >
+                      Account Name
+                    </ResizableHead>
+                    <ResizableHead
+                      width={colWidths.desc}
+                      onMouseDown={handleMouseDown("desc")}
+                    >
+                      Description
+                    </ResizableHead>
+                    <ResizableHead
+                      width={colWidths.amount}
+                      onMouseDown={handleMouseDown("amount")}
+                    >
+                      Amount
+                    </ResizableHead>
+                  </tr>
+                </TableHeader>
               </Table>
+
+              <div className="max-h-[500px] overflow-y-auto">
+                <Table className="w-full">
+                  <TableBody>
+                    {transactions.map((item, index) => (
+                      <TableRow
+                        key={item.id}
+                        className="hover:bg-yellow/10 transition-colors duration-200"
+                      >
+                        <TableCell
+                          className="border text-center px-2"
+                          style={{ width: colWidths.no }}
+                        >
+                          {index + 1}
+                        </TableCell>
+                        <TableCell
+                          className="border text-center px-2"
+                          style={{ width: colWidths.date }}
+                        >
+                          {new Date(item.createdAt).toLocaleDateString("id-ID")}
+                        </TableCell>
+                        <TableCell
+                          className="border text-center px-2"
+                          style={{ width: colWidths.name }}
+                        >
+                          {item.accountName}
+                        </TableCell>
+                        <TableCell
+                          className="border text-left px-2"
+                          style={{ width: colWidths.desc }}
+                        >
+                          {item.description}
+                        </TableCell>
+                        <TableCell
+                          className="border text-center px-2"
+                          style={{ width: colWidths.amount }}
+                        >
+                          Rp {item.amount.toLocaleString("id-ID")}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <p className="mt-2 text-sm text-gray-500 md:hidden">
           Geser tabel ke kanan &rarr; untuk lihat semua kolom.
