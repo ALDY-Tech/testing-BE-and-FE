@@ -9,7 +9,19 @@ datasource db {
 }
 
 model user {
-  id       Int  @id @default(autoincrement())
-  username     String @unique @db.VarChar
+  id       Int    @id @default(autoincrement())
+  username String @unique @db.VarChar
   password String
+
+  transactions transaction[]
+}
+
+model transaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  amount      Float
+  description String?  @db.VarChar
+  createdAt   DateTime @default(now())
+
+  user user @relation(fields: [userId], references: [id])
 }

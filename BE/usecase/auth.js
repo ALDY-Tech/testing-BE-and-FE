@@ -9,7 +9,7 @@ const register = async ({ username, password }) => {
 
   const hashedPassword = await argon2.hash(password);
   const newUser = await insertUser({
-    user: username,
+    username: username,
     password: hashedPassword,
   });
   return newUser;
