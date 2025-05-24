@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios'; // jangan lupa install: npm install axios
+import logo from "../assets/logo.png"
 
 const Login = () => {
   const navigate = useNavigate();
@@ -26,8 +27,9 @@ const Login = () => {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-white">
-      <div className="bg-yellow text-blue p-8 rounded-xl shadow-lg w-full max-w-md font-montserrat">
+    <div className="h-screen flex flex-col items-center justify-center bg-white">
+      <div><img src={logo} height={300} width={300} alt="" /></div>
+      <div className="bg-white text-blue p-8 rounded-xl shadow-2xl  w-full max-w-md font-montserrat">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         <div className="space-y-4">
           <div>
