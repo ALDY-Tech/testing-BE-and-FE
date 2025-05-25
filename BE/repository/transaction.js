@@ -19,25 +19,42 @@ const insertTransaction = async ({ userId, amount, description }) => {
 const allTransactionsbyUserId = async (userId) => {
   const transactions = await db.transaction.findMany({
     where: { userId: userId },
+    include: {
+      user: true,
+    }
   });
   return transactions;
 };
 
 
-const updateTransaction = async (id, transaction) => {
+const updateTransaction = async (id, amount, description) => {
   const updatedTransaction = await db.transaction.update({
     where: { id: id },
     data: {
-      amount: transaction.amount,
-      type: transaction.type,
-      description: transaction.description,
+      amount: amount,
+      description: description,
+    },
+    include: {
+      user: true, // Include user data if needed
     },
   });
   return updatedTransaction;
+};
+
+const deleteTransaction = async (id) => {
+  const deletedTransaction = await db.transaction.delete({
+    where: { id: id },
+    include: {
+      user: true, // Include user data if needed
+    }
+  });
+
+  return deletedTransaction;
 };
 
 export {
   insertTransaction,
   allTransactionsbyUserId,
   updateTransaction,
+  deleteTransaction,
 };

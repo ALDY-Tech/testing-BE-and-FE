@@ -1,7 +1,8 @@
 import {
   insertTransaction,
   updateTransaction,
-  allTransactionsbyUserId
+  allTransactionsbyUserId,
+  deleteTransaction
 } from "../repository/transaction.js";
 
 // TODO: Implement the use case for insert transaction
@@ -14,11 +15,15 @@ const insertTransactionUseCase = async ({ userId, amount, description }) => {
 };
 
 // TODO: Implement the use case for update transaction
-const updateTransactionUseCase = async (id, transaction) => {
-  if (!transaction.amount || !transaction.type || !transaction.description) {
+const updateTransactionUseCase = async (id, amount, description) => {
+  if (!transaction.amount || !transaction.description) {
     throw new Error("Semua field harus diisi");
   }
-  const updatedTransaction = await updateTransaction(id, transaction);
+  const updatedTransaction = await updateTransaction(id, amount, description);
+  if (!updatedTransaction) {
+    throw new Error("Transaksi tidak ditemukan");
+  }
+  
   return updatedTransaction;
 };
 
@@ -31,8 +36,17 @@ const allTransactionsbyUserIDUseCase = async (userId) => {
   return transactions;
 };
 
+const deleteTransactionUseCase = async (id) => {
+  const deletedTransaction = await deleteTransaction(id);
+  if (!deletedTransaction) {
+    throw new Error("Transaksi tidak ditemukan");
+  }
+  return deletedTransaction;
+};
+
 export {
   insertTransactionUseCase,
   updateTransactionUseCase,
   allTransactionsbyUserIDUseCase,
+  deleteTransactionUseCase
 };
