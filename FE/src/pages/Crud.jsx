@@ -8,16 +8,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import axios from "axios";
 
-const ResizableHead = ({ children, width, onMouseDown }) => (
+const ResizableHead = ({ children, width, onMouseDown, isDragging }) => (
   <th
-    className="relative border px-2 text-center text-xs md:text-sm lg:text-base"
-    style={{ width }}
+    className="relative border px-2 text-center text-xs md:text-sm lg:text-base bg-yellow"
+    style={{ 
+      width,
+      minWidth: 50,
+      transition: isDragging ? 'none' : 'width 0.2s ease'
+    }}
   >
-    <div>{children}</div>
+    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+      {children}
+    </div>
     <div
       onMouseDown={onMouseDown}
-      className="absolute right-0 top-0 h-full w-[2px] cursor-col-resize"
+      className={`absolute right-0 top-0 h-full w-1 cursor-col-resize   ${
+        isDragging ? '' : ''
+      }`}
+      style={{ userSelect: 'none' }}
     />
   </th>
 );
@@ -27,27 +37,29 @@ const Crud = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const [colWidths, setColWidths] = useState({
-    no: 50,
-    date: 150,
-    name: 200,
-    desc: 300,
-    amount: 150,
+  const [formData, setFormData] = useState({
+    description: "",
+    amount: "",
   });
 
-  const isDragging = useRef(false);
-  const currentCol = useRef(null);
+  const [colWidths, setColWidths] = useState({
+    no: 60,
+    date: 160,
+    desc: 320,
+    amount: 160,
+  });
+
+  const [isDraggingHeader, setIsDraggingHeader] = useState(false);
 
   const handleMouseDown = (key) => (e) => {
-    isDragging.current = true;
-    currentCol.current = key;
+    setIsDraggingHeader(true);
     const startX = e.clientX;
     const startWidth = colWidths[key];
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
 
     const onMouseMove = (e) => {
-      if (!isDragging.current) return;
-      const newWidth = startWidth + e.clientX - startX;
+      const newWidth = startWidth + (e.clientX - startX);
       setColWidths((prev) => ({
         ...prev,
         [key]: Math.max(newWidth, 50),
@@ -55,41 +67,43 @@ const Crud = () => {
     };
 
     const onMouseUp = () => {
-      isDragging.current = false;
-      currentCol.current = null;
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      setIsDraggingHeader(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     };
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Token tidak ditemukan. Silakan login ulang.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get("http://localhost:5000/transaction", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setTransactions(response.data);
+    } catch (err) {
+      console.error(err);
+      setError("Gagal mengambil data transaksi.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (!storedUserId) {
-      setError("User ID not found in localStorage.");
-      setLoading(false);
-      return;
-    }
-
-    fetch("http://localhost:5000/transaction")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data) => {
-        const filtered = data.filter(
-          (item) => item.userId === parseInt(storedUserId)
-        );
-        console.log("Filtered data:", filtered);
-        setTransactions(filtered);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+    fetchTransactions();
   }, []);
 
   return (
@@ -101,70 +115,85 @@ const Crud = () => {
         <div className="mb-5 flex text-yellow">
           <button
             onClick={() => setShowModal(true)}
-            className="bg-blue px-4 py-2 rounded-md text-xs md:text-sm"
+            className="bg-blue px-4 py-2 rounded-md text-xs md:text-sm hover:bg-blue/90 transition-colors"
           >
             Add New Transaction
           </button>
 
           {showModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-yellow/25 backdrop-blur-sm text-blue">
-              <div className="bg-white p-6 rounded-md w-full max-w-md shadow-lg relative text-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm">
+              <div className="bg-white p-6 rounded-md w-full max-w-md shadow-lg relative mx-4">
                 <h2 className="text-lg font-semibold mb-4">Add Transaction</h2>
 
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
-                    setShowModal(false);
+                    try {
+                      const token = localStorage.getItem("token");
+                      if (!token) {
+                        alert("Token tidak ditemukan. Silakan login ulang.");
+                        return;
+                      }
+
+                      await axios.post(
+                        "http://localhost:5000/transaction",
+                        {
+                          description: formData.description,
+                          amount: parseFloat(formData.amount),
+                        },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                          },
+                        }
+                      );
+
+                      setFormData({ description: "", amount: "" });
+                      setShowModal(false);
+                      await fetchTransactions();
+                    } catch (err) {
+                      console.error(err);
+                      alert("Gagal menambahkan transaksi.");
+                    }
                   }}
                   className="space-y-4"
                 >
                   <div>
-                    <label className="block text-sm font-medium">Date</label>
-                    <input
-                      type="date"
-                      className="w-full border px-2 py-1 rounded"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Account Name
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Description</label>
                     <input
                       type="text"
-                      className="w-full border px-2 py-1 rounded"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value })
+                      }
+                      className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue/50 outline-none"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium">
-                      Description
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border px-2 py-1 rounded"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Amount</label>
+                    <label className="block text-sm font-medium mb-1">Amount</label>
                     <input
                       type="number"
-                      className="w-full border px-2 py-1 rounded"
+                      value={formData.amount}
+                      onChange={(e) =>
+                        setFormData({ ...formData, amount: e.target.value })
+                      }
+                      className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue/50 outline-none"
                       required
                     />
                   </div>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-2 pt-4">
                     <button
                       type="button"
                       onClick={() => setShowModal(false)}
-                      className="px-4 py-2 bg-red-500 rounded text-yellow hover:bg-red-700"
+                      className="px-4 py-2 text-sm border rounded hover:bg-gray-100"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue text-yellow rounded hover:bg-blue-950"
+                      className="px-4 py-2 text-sm bg-blue text-white rounded hover:bg-blue/90"
                     >
                       Save
                     </button>
@@ -180,94 +209,79 @@ const Crud = () => {
         ) : loading ? (
           <p>Loading...</p>
         ) : (
-          <div className="w-full overflow-x-auto rounded-md border">
-            <div className="min-w-[600px]">
-              <Table className="bg-white w-full">
-                <TableHeader className="bg-yellow">
-                  <tr>
-                    <ResizableHead
-                      width={colWidths.no}
-                      onMouseDown={handleMouseDown("no")}
+          <div className="w-full overflow-x-auto rounded-md border shadow-sm">
+            <Table className="bg-white min-w-full">
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow>
+                  <ResizableHead
+                    width={colWidths.no}
+                    onMouseDown={handleMouseDown("no")}
+                    isDragging={isDraggingHeader}
+                  >
+                    No
+                  </ResizableHead>
+                  <ResizableHead
+                    width={colWidths.date}
+                    onMouseDown={handleMouseDown("date")}
+                    isDragging={isDraggingHeader}
+                  >
+                    Date
+                  </ResizableHead>
+                  <ResizableHead
+                    width={colWidths.desc}
+                    onMouseDown={handleMouseDown("desc")}
+                    isDragging={isDraggingHeader}
+                  >
+                    Description
+                  </ResizableHead>
+                  <ResizableHead
+                    width={colWidths.amount}
+                    onMouseDown={handleMouseDown("amount")}
+                    isDragging={isDraggingHeader}
+                  >
+                    Amount
+                  </ResizableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.map((item, index) => (
+                  <TableRow
+                    key={item.id}
+                    className="hover:bg-yellow/5 transition-colors"
+                  >
+                    <TableCell
+                      className="border text-center p-2"
+                      style={{ width: colWidths.no }}
                     >
-                      No
-                    </ResizableHead>
-                    <ResizableHead
-                      width={colWidths.date}
-                      onMouseDown={handleMouseDown("date")}
+                      {index + 1}
+                    </TableCell>
+                    <TableCell
+                      className="border text-center p-2"
+                      style={{ width: colWidths.date }}
                     >
-                      Date
-                    </ResizableHead>
-                    <ResizableHead
-                      width={colWidths.name}
-                      onMouseDown={handleMouseDown("name")}
+                      {new Date(item.createdAt).toLocaleDateString("id-ID")}
+                    </TableCell>
+                    <TableCell
+                      className="border text-center p-2"
+                      style={{ width: colWidths.desc }}
                     >
-                      Account Name
-                    </ResizableHead>
-                    <ResizableHead
-                      width={colWidths.desc}
-                      onMouseDown={handleMouseDown("desc")}
+                      {item.description}
+                    </TableCell>
+                    <TableCell
+                      className="border text-center p-2 font-medium"
+                      style={{ width: colWidths.amount }}
                     >
-                      Description
-                    </ResizableHead>
-                    <ResizableHead
-                      width={colWidths.amount}
-                      onMouseDown={handleMouseDown("amount")}
-                    >
-                      Amount
-                    </ResizableHead>
-                  </tr>
-                </TableHeader>
-              </Table>
-
-              <div className="max-h-[500px] overflow-y-auto">
-                <Table className="w-full">
-                  <TableBody>
-                    {transactions.map((item, index) => (
-                      <TableRow
-                        key={item.id}
-                        className="hover:bg-yellow/10 transition-colors duration-200"
-                      >
-                        <TableCell
-                          className="border text-center px-2"
-                          style={{ width: colWidths.no }}
-                        >
-                          {index + 1}
-                        </TableCell>
-                        <TableCell
-                          className="border text-center px-2"
-                          style={{ width: colWidths.date }}
-                        >
-                          {new Date(item.createdAt).toLocaleDateString("id-ID")}
-                        </TableCell>
-                        <TableCell
-                          className="border text-center px-2"
-                          style={{ width: colWidths.name }}
-                        >
-                          {item.accountName}
-                        </TableCell>
-                        <TableCell
-                          className="border text-left px-2"
-                          style={{ width: colWidths.desc }}
-                        >
-                          {item.description}
-                        </TableCell>
-                        <TableCell
-                          className="border text-center px-2"
-                          style={{ width: colWidths.amount }}
-                        >
-                          Rp {item.amount.toLocaleString("id-ID")}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+                      Rp {item.amount.toLocaleString("id-ID")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
 
-        <p className="mt-2 text-sm text-gray-500 md:hidden">
-          Geser tabel ke kanan &rarr; untuk lihat semua kolom.
+        <p className="mt-3 text-sm text-gray-500 md:hidden">
+          Scroll horizontally → to view all columns
         </p>
       </div>
     </div>
