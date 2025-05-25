@@ -1,6 +1,6 @@
 // service.js
-const argon2 = require("argon2");
-const { insertUser, findUserByUsername } = require("../repository/auth.js");
+import argon2 from "argon2";
+import { insertUser, findUserByUsername } from "../repository/auth.js";
 
 // Register logic
 const register = async ({ username, password }) => {
@@ -26,7 +26,7 @@ const login = async ({ username, password }) => {
 };
 
 
-module.exports = {
+export {
   register,
   login,
 };

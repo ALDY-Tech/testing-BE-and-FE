@@ -1,14 +1,16 @@
-const {
+import {
   insertTransactionController,
   updateTransactionController,
-  allTransactionsController,
-} = require("../controller/transaction.js");
+  allTransactionsByUserIDController,
+} from "../controller/transaction.js";
+import {authenticateUser} from "../middleware/auth.js";
 
-const express = require("express");
+import express from "express";
+
 const router = express.Router();
 
-router.post("/", insertTransactionController);
-router.put("/:id", updateTransactionController);
-router.get("/", allTransactionsController);
+router.post("/", authenticateUser, insertTransactionController);
+router.put("/:id", authenticateUser, updateTransactionController);
+router.get("/", authenticateUser, allTransactionsByUserIDController);
 
-module.exports = router;
+export default router;

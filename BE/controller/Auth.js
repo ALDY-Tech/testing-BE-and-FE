@@ -1,4 +1,6 @@
-const { register, login } = require("../usecase/auth.js");
+import { register, login } from "../usecase/auth.js";
+import { generateToken } from "../utils/jwt.js";
+
 
 const registerController = async (req, res) => {
   const { username, password, confirmPassword } = req.body;
@@ -23,16 +25,18 @@ const loginController = async (req, res) => {
 
   try {
     const loggedUser = await login({ username, password });
+    const token = await generateToken(loggedUser.id);
+
     res.status(200).json({
       msg: "Login berhasil",
-      user: { user: loggedUser.username },
+      token: token,
     });
   } catch (err) {
     res.status(400).json({ msg: err.message });
   }
 };
 
-module.exports = {
+export {
   registerController,
   loginController,
 };

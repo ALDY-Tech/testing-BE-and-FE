@@ -1,8 +1,7 @@
-const express = require("express");
-const session = require("express-session");
-const cors = require("cors");
-const authRoutes = require("./routes/authRoute.js");
-const transactionRoutes = require("./routes/transaction.js");
+import express from "express";
+import cors from "cors";
+import authRoutes from "./routes/authRoute.js";
+import transactionRoutes from "./routes/transaction.js";
 // Inisialisasi Express
 
 const app = express();
@@ -14,18 +13,6 @@ app.use(
   })
 );
 app.use(express.json());
-
-// Setup session
-app.use(
-  session({
-    secret: "your-secret-key", // ganti dengan string rahasia kamu
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // session valid 1 hari
-    },
-  })
-);
 
 // Gunakan routes
 app.use("/", authRoutes);

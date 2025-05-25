@@ -1,4 +1,5 @@
-const db = require("../config/config.js");
+import prisma from "../config/config.js";
+const db = prisma;
 
 const insertUser = async (user) => {
   const newUser =await db.user.create({
@@ -19,7 +20,7 @@ const findUserByUsername = async (username) => {
   return loginUser;
 };
 
-module.exports = {
+export {
   insertUser,
   findUserByUsername,
 };

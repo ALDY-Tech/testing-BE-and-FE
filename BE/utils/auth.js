@@ -1,2 +1,0 @@
-//  untuk hash password
-// jwt

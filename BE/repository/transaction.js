@@ -1,20 +1,28 @@
-const db = require("../config/config.js");
+import prisma from "../config/config.js";
+const db = prisma;
 
-const insertTransaction = async (transaction) => {
+const insertTransaction = async ({ userId, amount, description }) => {
   const newTransaction = await db.transaction.create({
     data: {
-      userId: transaction.userId,
-      amount: transaction.amount,
-      description: transaction.description,
+      userId,
+      amount,
+      description,
+    },
+    include: {
+      user: true, // Include user data if needed
     },
   });
+
   return newTransaction;
 };
 
-const allTransactions = async () => {
-  const transactions = await db.transaction.findMany();
+const allTransactionsbyUserId = async (userId) => {
+  const transactions = await db.transaction.findMany({
+    where: { userId: userId },
+  });
   return transactions;
 };
+
 
 const updateTransaction = async (id, transaction) => {
   const updatedTransaction = await db.transaction.update({
@@ -28,4 +36,8 @@ const updateTransaction = async (id, transaction) => {
   return updatedTransaction;
 };
 
-module.exports = { insertTransaction, allTransactions, updateTransaction };
+export {
+  insertTransaction,
+  allTransactionsbyUserId,
+  updateTransaction,
+};
