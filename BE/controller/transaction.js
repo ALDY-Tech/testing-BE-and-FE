@@ -55,7 +55,7 @@ const updateTransactionController = async (req, res) => {
   const {amount, description} = req.body;
 
   try {
-    const updatedTransaction = await updateTransactionUseCase(id, amount, description);
+    const updatedTransaction = await updateTransactionUseCase(parseInt(id), amount, description);
     if (!updatedTransaction) {
       return res.status(404).json({ msg: "Transaksi tidak ditemukan" });
     }
@@ -77,7 +77,7 @@ const deleteTransactionController = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedTransaction = await deleteTransactionUseCase(id);
+    const deletedTransaction = await deleteTransactionUseCase(parseInt(id));
     res.status(200).json({
       msg: "Transaksi berhasil dihapus",
       transaction: {

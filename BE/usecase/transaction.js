@@ -16,7 +16,7 @@ const insertTransactionUseCase = async ({ userId, amount, description }) => {
 
 // TODO: Implement the use case for update transaction
 const updateTransactionUseCase = async (id, amount, description) => {
-  if (!transaction.amount || !transaction.description) {
+  if (!amount || !description) {
     throw new Error("Semua field harus diisi");
   }
   const updatedTransaction = await updateTransaction(id, amount, description);
