@@ -1,7 +1,7 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Homepage from "./pages/Homepage"
-import Crud from "./pages/crud"
+import Crud from "./pages/Crud"
 import Login from "./pages/Login"
 import CrudAdd from "./pages/CrudAdd"
 import Register from "./pages/Register"
