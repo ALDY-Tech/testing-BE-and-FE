@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,8 @@ export default function RegisterForm() {
     setError("");
     setSuccess("");
   };
+
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,6 +41,8 @@ export default function RegisterForm() {
       } else {
         setSuccess(data.msg || "Registrasi berhasil");
         setFormData({ username: "", password: "", confPassword: "" });
+        navigate("/login")
+
       }
     } catch (err) {
       setError("Gagal menghubungi server");

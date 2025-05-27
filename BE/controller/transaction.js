@@ -33,29 +33,35 @@ const insertTransactionController = async (req, res) => {
 
 const allTransactionsByUserIDController = async (req, res) => {
   const userId = req.user.userId;
+
   try {
     const transactions = await allTransactionsbyUserIDUseCase(userId);
 
+    if (!transactions || transactions.length === 0) {
+      return res.status(200).json([]); // Tetap 200 OK, kirim array kosong
+    }
+
     const result = transactions.map((t) => ({
       id: t.id,
-      username: t.user.username, // ubah dari userId ke username
+      username: t.user.username,
       amount: t.amount,
       description: t.description,
       createdAt: t.createdAt,
     }));
 
-    res.json(result);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: "Failed to get transactions" });
   }
 };
+
 
 const updateTransactionController = async (req, res) => {
   const { id } = req.params;
   const {amount, description} = req.body;
 
   try {
-    const updatedTransaction = await updateTransactionUseCase(parseInt(id), amount, description);
+    const updatedTransaction = await updateTransactionUseCase(parseInt(id), parseFloat(amount), description);
     if (!updatedTransaction) {
       return res.status(404).json({ msg: "Transaksi tidak ditemukan" });
     }
@@ -67,6 +73,7 @@ const updateTransactionController = async (req, res) => {
         amount: updatedTransaction.amount,
         description: updatedTransaction.description,
       },
+      
     });
   } catch (err) {
     res.status(400).json({ msg: err.message });
