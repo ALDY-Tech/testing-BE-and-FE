@@ -1,8 +1,9 @@
 import React from 'react'
+import Table from './Table'
 
 const CrudAdd = () => {
   return (
-    <a href='/crud'>BackCrud</a>
+    <div><Table></Table></div>
   )
 }
 
