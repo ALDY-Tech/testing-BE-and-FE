@@ -18,9 +18,7 @@ app.use(express.json());
 app.use("/", authRoutes);
 app.use("/transaction", transactionRoutes);
 app.get("/hello", (req, res) => {
-  res.json({
-    message: "Welcome to the Expense Tracker API",
-  });
+  res.send("Hello World!");
 });
 
 app.listen(5000, () => console.log("Server running on port 5000"));
