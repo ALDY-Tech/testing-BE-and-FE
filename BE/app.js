@@ -17,7 +17,7 @@ app.use(express.json());
 // Gunakan routes
 app.use("/", authRoutes);
 app.use("/transaction", transactionRoutes);
-app.get("/", (req, res) => {
+app.get("/hello", (req, res) => {
   res.json({
     message: "Welcome to the Expense Tracker API",
   });
